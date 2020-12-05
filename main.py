@@ -1,74 +1,7 @@
 import pygame
 from legionary.player import Player
-
-class Enemy:
-    def __init__(self, x, y, width, height, end, vel=5):
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self.vel = vel
-        self.end = end
-        self.walk_count = 0
-        self.path = [self.x, self.end]
-        self.walk_left = [pygame.image.load(f'pngs/L{i}E.png') for i in range(1, 12)]
-        self.walk_right = [pygame.image.load(f'pngs/R{i}E.png') for i in range(1, 12)]
-        self.hitbox = (self.x + 17, self.y + 2, 31, 57)
-        self.health = 3
-        self.visible = True
-
-    def draw(self, screen):
-        self.move()
-        if self.visible:
-            if self.walk_count + 1 >= 33:
-                self.walk_count = 0
-            if self.vel > 0:
-                screen.blit(self.walk_right[self.walk_count // 3], (self.x, self.y))
-                self.walk_count += 1
-            else:
-                screen.blit(self.walk_left[self.walk_count // 3], (self.x, self.y))
-                self.walk_count += 1
-            self.hitbox = (self.x + 17, self.y + 2, 31, 57)
-            pygame.draw.rect(screen, (255, 0, 0), (self.hitbox[0], self.hitbox[1] - 20, 50, 10))
-            pygame.draw.rect(screen, (0, 255, 0), (self.hitbox[0], self.hitbox[1] - 20, 50 - ((3 - self.health) * 16), 10))
-        # pygame.draw.rect(screen, (255, 0, 0), self.hitbox, 2)
-
-
-    def move(self):
-        if self.vel > 0:
-            if self.x + self.vel < self.path[-1]:
-                self.x += self.vel
-            else:
-                self.vel = self.vel * -1
-                self.walk_count = 0
-        else:
-            if self.x - self.vel > self.path[0]:
-                self.x += self.vel
-            else:
-                self.vel = self.vel * -1
-                self.walk_count = 0
-
-    def hit(self):
-        if self.health > 0:
-            self.health -= 1
-        else:
-            self.visible = False
-        return 1
-
-
-
-class Projectile:
-
-    def __init__(self, x, y, radius, direction, color, vel=10):
-        self.x = x
-        self.y = y
-        self.radius = radius
-        self.direction = direction
-        self.color = color
-        self.vel = vel * direction
-    
-    def draw(self, screen):
-        pygame.draw.circle(screen, self.color, (self.x, self.y), self.radius)
+from legionary.enemies import Enemy
+from legionary.projectiles import Projectile
 
 
 def redraw_screen(screen, player, bullets, enemy, score, font):
@@ -92,19 +25,37 @@ BACKGROUND = pygame.image.load("./pngs/background.png").convert()
 BACKGROUND = pygame.transform.scale(BACKGROUND, (1200, 600))
 
 font = pygame.font.SysFont("comicsans", 14, bold=True)
-# walk_left = [pygame.image.load(f'pngs/player/L{i}.png') for i in range(1, 10)]
-walk_right = []
-for i in range(1, 10):
-    filepath =  f"pngs/player/r{i}.png"
-    img = pygame.image.load(str(filepath))
-    img.set_colorkey((255, 255, 255))
-    walk_right.append(pygame.transform.scale(img.convert_alpha(), (128, 128)))
+
+def load_images(
+    loc="player", 
+    image_suffix="r", 
+    transform=False, 
+    num_images=10, 
+    size_x=128, 
+    size_y=128, 
+    remove_white=True
+    ):
+    images = []
+    for i in range(1, num_images):
+        filepath =  f"pngs/{loc}/{image_suffix}{i}.png"
+        img = pygame.image.load(filepath)
+        if remove_white:
+            img.set_colorkey((255, 255, 255))
+            img = img.convert_alpha()
+        if transform:
+            images.append(pygame.transform.scale(img, (size_x, size_y)))
+        else:
+            images.append(img)
+    return images
+
+player_walk = load_images(transform=True)
+enemy_walk = load_images(loc="enemy1", image_suffix="r", num_images=12, remove_white=False)
 
 bullets = []
 reload_timer = 0
 score = 0
-player = Player(50, 440, 128, 128, walk_images=walk_right, vel=8)
-enemy = Enemy(100, 440, 64, 64, 250)
+player = Player(50, 440, 128, 128, walk_images=player_walk, vel=8)
+enemy = Enemy(100, 440, 64, 64, 250, walk_images=enemy_walk)
 
 running = True
 while running:
