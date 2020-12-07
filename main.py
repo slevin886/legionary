@@ -49,12 +49,21 @@ def load_images(
     return images
 
 player_walk = load_images(transform=True)
-enemy_walk = load_images(loc="enemy1", image_suffix="r", num_images=12, remove_white=False)
+enemy_walk = load_images(
+    loc="barbarian", 
+    image_suffix="r", 
+    num_images=12, 
+    remove_white=False,
+    transform=True,
+    # size_x=150,
+    # size_y=150 
+    
+    )
 
 bullets = []
 reload_timer = 0
 score = 0
-player = Player(50, 440, 128, 128, walk_images=player_walk, vel=8)
+player = Player(50, 450, 128, 128, walk_images=player_walk, vel=8)
 enemy = Enemy(100, 440, 64, 64, 250, walk_images=enemy_walk)
 
 running = True
