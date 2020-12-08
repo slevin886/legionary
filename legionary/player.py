@@ -36,8 +36,11 @@ class Player:
                 screen.blit(self.walk_left[0], (self.x, self.y))
             else:
                 screen.blit(self.walk_right[0], (self.x, self.y))
-        self.hitbox = (self.x + 17, self.y + 11, 29, 54)
-        # pygame.draw.rect(screen, (255, 0, 0), self.hitbox, 2)
+        if self.left: # correct for image turninig left:
+            self.hitbox = (self.x + 55, self.y + 3, 35, 95)
+        else:
+            self.hitbox = (self.x + 25, self.y + 3, 35, 95)
+        pygame.draw.rect(screen, (255, 0, 0), self.hitbox, 2)
     
     def hit(self):
         self.health -= 1
