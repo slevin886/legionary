@@ -4,13 +4,15 @@ from .settings import *
 vec = pg.math.Vector2
 
 class Player(pg.sprite.Sprite):
-    def __init__(self, acc_rate=0.5, friction=-0.12):
+    def __init__(self, game, acc_rate=0.5, friction=-0.12, gravity=0.5):
         pg.sprite.Sprite.__init__(self)
+        self.game = game # reference to game instance
         self.image = pg.Surface((30, 40))
         self.image.fill((0, 255, 0))
         self.rect = self.image.get_rect()
         self.acc_rate = acc_rate
         self.friction = friction
+        self.gravity = gravity
         self.rect.center = (SCREEN_X / 2, SCREEN_Y / 2)
         self.pos = vec(SCREEN_X / 2, SCREEN_Y / 2)
         self.vel = vec(0, 0)
@@ -19,8 +21,17 @@ class Player(pg.sprite.Sprite):
         self.left = False
         self.right = False
 
+
+    def jump(self, jump_speed=-20):
+        # check if on platform
+        self.rect.y += 1
+        standing = pg.sprite.spritecollide(self, self.game.platforms, False)
+        self.rect.y -= 1
+        if standing:
+            self.vel.y = jump_speed
+
     def update(self):
-        self.acc = vec(0, 0.5)
+        self.acc = vec(0, self.gravity)
         keys = pg.key.get_pressed()
         if keys[pg.K_LEFT]:
             self.acc.x = self.acc_rate * -1

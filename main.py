@@ -32,14 +32,12 @@ class Legionary:
     def new(self):
         self.all_sprites = pygame.sprite.Group()
         self.platforms = pygame.sprite.Group()
-        self.player = Player()
+        self.player = Player(self)
         self.all_sprites.add(self.player)
-        p1 = Platform(0, SCREEN_Y - 40, SCREEN_X, 40)
-        self.all_sprites.add(p1)
-        self.platforms.add(p1)
-        p2 = Platform(SCREEN_X / 2 - 50, SCREEN_Y * 3 / 4, 100, 20)
-        self.all_sprites.add(p2)
-        self.platforms.add(p2)
+        for plat in LEVEL_1_PLATFORMS:
+            p = Platform(*plat)
+            self.all_sprites.add(p)
+            self.platforms.add(p)
         self.run()
 
     def run(self):
@@ -53,9 +51,11 @@ class Legionary:
     def update(self):
         self.all_sprites.update()
         hits = pygame.sprite.spritecollide(self.player, self.platforms, False) # False, don't delete on colission
-        if hits:
-            self.player.pos.y = hits[0].rect.top + 1
-            self.player.vel.y = 0
+        # check if player lands on platform
+        if self.player.vel.y > 0:
+            if hits:
+                self.player.pos.y = hits[0].rect.top + 1
+                self.player.vel.y = 0
     
     def events(self):
         for event in pygame.event.get():
@@ -63,6 +63,9 @@ class Legionary:
                 if self.playing:
                     self.playing = False
                 self.running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    self.player.jump()
 
     def draw(self):
         self.screen.fill((0, 0, 0))
