@@ -3,12 +3,26 @@ from .settings import *
 
 vec = pg.math.Vector2
 
+class LoadSprites:
+    # loading sprite sheet for performance
+    def __init__(self, filename):
+        self.spritesheet = pg.image.load(filename).convert()
+
+    def get_image(self, x, y, width, height):
+        image = pg.Surface((width, height))
+        image.blit(self.spritesheet, (0, 0), (x, y, width, height))
+        image = pg.transform.scale(image, (width // 2, height // 2))
+        return image #0, 0 for corner
+
 class Player(pg.sprite.Sprite):
     def __init__(self, game, acc_rate=0.5, friction=-0.12, gravity=0.5):
         pg.sprite.Sprite.__init__(self)
         self.game = game # reference to game instance
-        self.image = pg.Surface((30, 40))
-        self.image.fill((0, 255, 0))
+        # self.image = pg.Surface((30, 40))
+        # self.image.fill((0, 255, 0))
+        self.load_images()
+        self.image = self.standing_frames[0]
+        self.image.set_colorkey((0, 0, 0))
         self.rect = self.image.get_rect()
         self.acc_rate = acc_rate
         self.friction = friction
@@ -18,19 +32,72 @@ class Player(pg.sprite.Sprite):
         self.vel = vec(0, 0)
         self.acc = vec(0, 0)
         self.standing = True
+        self.walking = False
+        self.jumping = False
+        self.current_frame = 0
+        self.last_update = 0 # space out the frame rate
         self.left = False
         self.right = False
 
+    def load_images(self):
+        # assumes sprite sheet
+        self.standing_frames = [
+            self.game.sprite_sheet.get_image(614, 1063, 120, 191),
+            self.game.sprite_sheet.get_image(690, 406, 120, 201)
+        ]
+        for frame in self.standing_frames:
+            frame.set_colorkey((0, 0, 0))
+        self.walk_frames_r = [
+            self.game.sprite_sheet.get_image(678, 860, 120, 201),
+            self.game.sprite_sheet.get_image(692, 1458, 120, 207)
+        ]
+        for frame in self.walk_frames_r:
+            frame.set_colorkey((0, 0, 0))
 
-    def jump(self, jump_speed=-20):
+        self.walk_frames_l = [pg.transform.flip(frame, True, False) for frame in self.walk_frames_r]
+        self.jump_frame = self.game.sprite_sheet.get_image(382, 763, 150, 181)
+        self.jump_frame.set_colorkey((0, 0, 0))
+
+    def jump(self, jump_speed=-15):
         # check if on platform
         self.rect.y += 1
         standing = pg.sprite.spritecollide(self, self.game.platforms, False)
         self.rect.y -= 1
         if standing:
             self.vel.y = jump_speed
+            self.jumping = True
+
+    def animate(self):
+        now = pg.time.get_ticks()
+        if self.vel.x != 0:
+            self.walking = True
+        else:
+            self.walking = False
+        # walking animation
+        if self.walking:
+            if now - self.last_update > 200:
+                self.last_update = now
+                self.current_frame = (self.current_frame + 1) % len(self.walk_frames_l)
+                bottom = self.rect.bottom
+                if self.vel.x > 0:
+                    self.image = self.walk_frames_r[self.current_frame]
+                else:
+                    self.image = self.walk_frames_l[self.current_frame]
+                self.rect = self.image.get_rect()
+                self.rect.bottom = bottom
+
+        # standing frames
+        if not self.jumping and not self.walking:
+            if now - self.last_update > 250: # ms
+                self.last_update = now
+                self.current_frame = (self.current_frame + 1) % len(self.standing_frames)
+                bottom = self.rect.bottom
+                self.image = self.standing_frames[self.current_frame]
+                self.rect = self.image.get_rect()
+                self.rect.bottom = bottom
 
     def update(self):
+        self.animate()
         self.acc = vec(0, self.gravity)
         keys = pg.key.get_pressed()
         if keys[pg.K_LEFT]:
@@ -51,12 +118,14 @@ class Player(pg.sprite.Sprite):
         self.acc.x += self.vel.x * self.friction 
         # motion equations
         self.vel += self.acc
+        if abs(self.vel.x) < 0.5:
+            self.vel.x = 0
         self.pos += (self.vel + 0.5 * self.acc)
         # instituting wrap around
-        if self.pos.x > SCREEN_X:
-            self.pos.x = 0
+        # if self.pos.x > SCREEN_X:
+        #     self.pos.x = 0
         if self.pos.x < 0:
-            self.pos.x = SCREEN_X
+            self.pos.x = 0
         self.rect.midbottom = self.pos
 
 

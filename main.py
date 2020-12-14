@@ -1,5 +1,6 @@
 import pygame
-from legionary.player import Player
+from os import path
+from legionary.player import Player, LoadSprites
 from legionary.enemies import Enemy
 from legionary.projectiles import Projectile
 from legionary.platforms import Platform
@@ -26,10 +27,22 @@ class Legionary:
         self.screen = pygame.display.set_mode((SCREEN_X, SCREEN_Y))
         pygame.display.set_caption("Legionary")
         self.clock = pygame.time.Clock()
-        # self.font = pygame.font.SysFont("comicsans", 14, bold=True)
+        self.font = pygame.font.match_font("comicsans")
         self.running = True
+        self.load_data()
+
+    def load_data(self):
+        self.dir = path.dirname(__file__)
+        with open(path.join(self.dir, HIGHSCORE_FILE), 'w') as f:
+            try:
+                self.highscore = int(f.read())
+            except:
+                self.highscore = 0
+        img_dir = path.join(self.dir, SPRITESHEET_FILE)
+        self.sprite_sheet = LoadSprites(img_dir)
 
     def new(self):
+        self.score = 0
         self.all_sprites = pygame.sprite.Group()
         self.platforms = pygame.sprite.Group()
         self.player = Player(self)
@@ -56,6 +69,23 @@ class Legionary:
             if hits:
                 self.player.pos.y = hits[0].rect.top + 1
                 self.player.vel.y = 0
+                self.player.jumping = False
+        # Scroll screen
+        if self.player.pos.x > SCREEN_X / 2 and self.player.vel.x > 1:
+            print(self.player.pos.x, SCREEN_X / 2)
+            self.player.pos.x = SCREEN_X / 2 - 2  # -2 prevents friction from hanging over mid  
+            for plat in self.platforms:
+                plat.rect.x -= abs(self.player.vel.x)
+                if plat.rect.right < 0:
+                    plat.kill()
+        # falling death
+        if self.player.rect.bottom > SCREEN_Y:
+            for sprite in self.all_sprites:
+                sprite.rect.y -= max(10, self.player.vel.y)
+                if sprite.rect.bottom < 0:
+                    sprite.kill()
+        if len(self.platforms) == 0:
+            self.playing = False
     
     def events(self):
         for event in pygame.event.get():
@@ -70,13 +100,54 @@ class Legionary:
     def draw(self):
         self.screen.fill((0, 0, 0))
         self.all_sprites.draw(self.screen)
+        self.draw_text(25, 25, f"Score: {self.score}", 22, (255, 0, 0))
         pygame.display.flip()
 
+    def draw_text(self, x, y, text, size, color):
+        font = pygame.font.Font(self.font, size)
+        text_surface = font.render(text, True, color)
+        text_rect = text_surface.get_rect()
+        text_rect.midtop = (x, y)
+        self.screen.blit(text_surface, text_rect)
+
+    def wait_for_key(self):
+        waiting = True
+        while waiting:
+            self.clock.tick(FRAMES_PER_SEC / 2)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    waiting = False
+                    self.running = False
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN:
+                        waiting = False
+                    
+
     def show_start_screen(self):
-        pass
+        self.screen.fill((160, 200, 29))
+        self.draw_text(SCREEN_X / 2, SCREEN_Y / 2, "Legionary", 80, (0, 0, 0))
+        self.draw_text(SCREEN_X / 2, SCREEN_Y / 2 + 100, "Press Enter to Begin", 80, (0, 0, 0))
+        self.draw_text(SCREEN_X / 2, SCREEN_Y / 2 + 150, f"High Score: {self.highscore}", 80, (0, 0, 0))
+        pygame.display.flip()
+        self.wait_for_key()
+
+
 
     def show_game_over_screen(self):
-        pass
+        # make sure they're not just quitting
+        if not self.running:
+            return
+        self.screen.fill((250, 0, 0))
+        self.draw_text(SCREEN_X / 2, SCREEN_Y / 2, "GAME OVER", 80, (0, 0, 0))
+        self.draw_text(SCREEN_X / 2, SCREEN_Y / 2 + 100, f"Final Score: {self.score}", 60, (0, 0, 0))
+        self.draw_text(SCREEN_X / 2, SCREEN_Y / 2 + 150, "Press Enter to Play Again", 60, (0, 0, 0))
+        if self.score > self.highscore:
+            self.highscore = self.score
+            self.draw_text(SCREEN_X / 2, SCREEN_Y / 2 + 175, f"Congrats! New highscore!", 60, (0, 0, 0))
+            with open(path.join(self.dir, HIGHSCORE_FILE), 'w') as f:
+                f.write(str(self.score))
+        pygame.display.flip()
+        self.wait_for_key()
 
 legionary = Legionary()
 legionary.show_start_screen()
