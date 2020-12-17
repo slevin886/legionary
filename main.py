@@ -22,8 +22,8 @@ from legionary.settings import *
 
 class Legionary:
     def __init__(self):
-        pygame.init()
         pygame.mixer.init()
+        pygame.init()
         self.screen = pygame.display.set_mode((SCREEN_X, SCREEN_Y))
         pygame.display.set_caption("Legionary")
         self.clock = pygame.time.Clock()
@@ -40,6 +40,9 @@ class Legionary:
                 self.highscore = 0
         img_dir = path.join(self.dir, SPRITESHEET_FILE)
         self.sprite_sheet = LoadSprites(img_dir)
+        # load sounds
+        self.sound_dir = path.join(self.dir, "sounds")
+        self.jump_sound = pygame.mixer.Sound(path.join(self.sound_dir, "jump.wav"))
 
     def new(self):
         self.score = 0
@@ -48,26 +51,31 @@ class Legionary:
         self.player = Player(self)
         self.all_sprites.add(self.player)
         for plat in LEVEL_1_PLATFORMS:
-            p = Platform(*plat)
+            p = Platform(self, *plat)
             self.all_sprites.add(p)
             self.platforms.add(p)
+
+        pygame.mixer.music.load(path.join(self.sound_dir, "music.ogg"))
         self.run()
 
     def run(self):
+        pygame.mixer.music.play(loops=-1)
         self.playing = True
         while self.playing:
             self.clock.tick(FRAMES_PER_SEC)
             self.events()
             self.update()
             self.draw()
+        pygame.mixer.music.fadeout(500)
 
     def update(self):
         self.all_sprites.update()
-        hits = pygame.sprite.spritecollide(self.player, self.platforms, False) # False, don't delete on colission
+        landing = pygame.sprite.spritecollide(self.player, self.platforms, False) # False, don't delete on colission
+        landing = sorted(landing, key=lambda x: x.rect.bottom, reverse=True) # lowest platform first
         # check if player lands on platform
         if self.player.vel.y > 0:
-            if hits:
-                self.player.pos.y = hits[0].rect.top + 1
+            if landing and self.player.rect.bottom < landing[0].rect.bottom:
+                self.player.pos.y = landing[0].rect.top + 1
                 self.player.vel.y = 0
                 self.player.jumping = False
         # Scroll screen
@@ -96,10 +104,14 @@ class Legionary:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
                     self.player.jump()
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_UP:
+                    self.player.end_jump()
 
     def draw(self):
         self.screen.fill((0, 0, 0))
         self.all_sprites.draw(self.screen)
+        self.screen.blit(self.player.image, self.player.rect) # always in front
         self.draw_text(25, 25, f"Score: {self.score}", 22, (255, 0, 0))
         pygame.display.flip()
 
@@ -130,8 +142,6 @@ class Legionary:
         self.draw_text(SCREEN_X / 2, SCREEN_Y / 2 + 150, f"High Score: {self.highscore}", 80, (0, 0, 0))
         pygame.display.flip()
         self.wait_for_key()
-
-
 
     def show_game_over_screen(self):
         # make sure they're not just quitting
