@@ -14,3 +14,6 @@ LEVEL_1_PLATFORMS = [
 
 HIGHSCORE_FILE = "highscore.txt"
 SPRITESHEET_FILE = "test_sprites/spritesheet_jumper.png"
+
+BOOST_POWER = 60
+POW_SPAWN_PCT = 50

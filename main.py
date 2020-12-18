@@ -48,12 +48,10 @@ class Legionary:
         self.score = 0
         self.all_sprites = pygame.sprite.Group()
         self.platforms = pygame.sprite.Group()
+        self.powerups = pygame.sprite.Group()
         self.player = Player(self)
-        self.all_sprites.add(self.player)
         for plat in LEVEL_1_PLATFORMS:
-            p = Platform(self, *plat)
-            self.all_sprites.add(p)
-            self.platforms.add(p)
+            Platform(self, *plat) # gets added to group at __init__
 
         pygame.mixer.music.load(path.join(self.sound_dir, "music.ogg"))
         self.run()
@@ -72,11 +70,22 @@ class Legionary:
         self.all_sprites.update()
         landing = pygame.sprite.spritecollide(self.player, self.platforms, False) # False, don't delete on colission
         landing = sorted(landing, key=lambda x: x.rect.bottom, reverse=True) # lowest platform first
-        # check if player lands on platform
+        # Platform
         if self.player.vel.y > 0:
             if landing and self.player.rect.bottom < landing[0].rect.bottom:
-                self.player.pos.y = landing[0].rect.top + 1
-                self.player.vel.y = 0
+                landing = landing[0]
+                if (
+                self.player.pos.x < landing.rect.right  + 10 and 
+                self.player.pos.x > landing.rect.left - 10
+                ):
+                    self.player.pos.y = landing.rect.top + 1
+                    self.player.vel.y = 0
+                    self.player.jumping = False
+        # Powerups
+        power_hits = pygame.sprite.spritecollide(self.player, self.powerups, True)
+        for pow in power_hits:
+            if pow.type == "boost":
+                self.player.vel.x = BOOST_POWER
                 self.player.jumping = False
         # Scroll screen
         if self.player.pos.x > SCREEN_X / 2 and self.player.vel.x > 1:

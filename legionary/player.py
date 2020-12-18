@@ -16,7 +16,8 @@ class LoadSprites:
 
 class Player(pg.sprite.Sprite):
     def __init__(self, game, acc_rate=0.5, friction=-0.12, gravity=0.5):
-        pg.sprite.Sprite.__init__(self)
+        self.groups = game.all_sprites
+        pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game # reference to game instance
         # self.image = pg.Surface((30, 40))
         # self.image.fill((0, 255, 0))
