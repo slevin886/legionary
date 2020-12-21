@@ -46,13 +46,15 @@ class Legionary:
 
     def new(self):
         self.score = 0
-        self.all_sprites = pygame.sprite.Group()
+        self.all_sprites = pygame.sprite.LayeredUpdates()
         self.platforms = pygame.sprite.Group()
         self.powerups = pygame.sprite.Group()
+        self.enemies = pygame.sprite.Group()
         self.player = Player(self)
         for plat in LEVEL_1_PLATFORMS:
             Platform(self, *plat) # gets added to group at __init__
-
+        for enemy in LEVEL_1_ENEMIES:
+            Enemy(self, enemy.y_position, enemy.x_position)
         pygame.mixer.music.load(path.join(self.sound_dir, "music.ogg"))
         self.run()
 
@@ -70,6 +72,7 @@ class Legionary:
         self.all_sprites.update()
         landing = pygame.sprite.spritecollide(self.player, self.platforms, False) # False, don't delete on colission
         landing = sorted(landing, key=lambda x: x.rect.bottom, reverse=True) # lowest platform first
+        # now = pygame.time.get_ticks()
         # Platform
         if self.player.vel.y > 0:
             if landing and self.player.rect.bottom < landing[0].rect.bottom:
@@ -89,12 +92,20 @@ class Legionary:
                 self.player.jumping = False
         # Scroll screen
         if self.player.pos.x > SCREEN_X / 2 and self.player.vel.x > 1:
-            print(self.player.pos.x, SCREEN_X / 2)
             self.player.pos.x = SCREEN_X / 2 - 2  # -2 prevents friction from hanging over mid  
             for plat in self.platforms:
                 plat.rect.x -= abs(self.player.vel.x)
                 if plat.rect.right < 0:
                     plat.kill()
+            for enemy in self.enemies:
+                enemy.rect.x -= abs(self.player.vel.x)
+                if enemy.rect.right < 0:
+                    enemy.kill()
+        # enemy collisions 
+        enemy_collisions = pygame.sprite.spritecollide(self.player, self.enemies, False)
+        if enemy_collisions:
+            # TODO: decrease player health
+            self.playing = False
         # falling death
         if self.player.rect.bottom > SCREEN_Y:
             for sprite in self.all_sprites:
@@ -120,7 +131,7 @@ class Legionary:
     def draw(self):
         self.screen.fill((0, 0, 0))
         self.all_sprites.draw(self.screen)
-        self.screen.blit(self.player.image, self.player.rect) # always in front
+        # self.screen.blit(self.player.image, self.player.rect) # always in front
         self.draw_text(25, 25, f"Score: {self.score}", 22, (255, 0, 0))
         pygame.display.flip()
 

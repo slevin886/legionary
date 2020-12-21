@@ -1,4 +1,6 @@
 
+from collections import namedtuple
+
 SCREEN_X = 1200
 SCREEN_Y = 600
 # BACKGROUND = pygame.image.load("./pngs/background.png").convert()
@@ -10,6 +12,13 @@ LEVEL_1_PLATFORMS = [
     (SCREEN_X / 2 + 170, SCREEN_Y / 2, 50, 20),
     (SCREEN_X - 170, SCREEN_Y / 3, 50, 20),
     (SCREEN_X + 170, SCREEN_Y / 3, 50, 20)
+]
+
+enemy_tuple = namedtuple("enemy_tuple", ["y_position", "x_position"])
+
+LEVEL_1_ENEMIES = [
+    enemy_tuple(y_position=SCREEN_Y - 40, x_position=SCREEN_X - 70),
+    enemy_tuple(y_position=SCREEN_Y - 40, x_position=SCREEN_X + 270)
 ]
 
 HIGHSCORE_FILE = "highscore.txt"

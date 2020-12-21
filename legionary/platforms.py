@@ -5,6 +5,7 @@ import random
 
 class Platform(pg.sprite.Sprite):
     def __init__(self, game, x, y, width, height):
+        self._layer = 1
         self.groups = game.all_sprites, game.platforms
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
@@ -23,6 +24,7 @@ class Platform(pg.sprite.Sprite):
 
 class PowerUp(pg.sprite.Sprite):
     def __init__(self, game, platform):
+        self._layer = 1
         self.groups = game.all_sprites, game.powerups
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
