@@ -75,7 +75,10 @@ class Player(pg.sprite.Sprite):
             if self.vel.y < -3:
                 self.vel.y = -3
 
+    def shoot(self):
+        pass
 
+    
     def animate(self):
         now = pg.time.get_ticks()
         if self.vel.x != 0:
@@ -121,7 +124,6 @@ class Player(pg.sprite.Sprite):
             self.standing = False
         else:
             self.standing = True
-            self.walk_count = 0
         
         # apply friction
         self.acc.x += self.vel.x * self.friction 

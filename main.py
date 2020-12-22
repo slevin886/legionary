@@ -46,10 +46,12 @@ class Legionary:
 
     def new(self):
         self.score = 0
+        self.projectile_count = 0
         self.all_sprites = pygame.sprite.LayeredUpdates()
         self.platforms = pygame.sprite.Group()
         self.powerups = pygame.sprite.Group()
         self.enemies = pygame.sprite.Group()
+        self.projectiles = pygame.sprite.Group()
         self.player = Player(self)
         for plat in LEVEL_1_PLATFORMS:
             Platform(self, *plat) # gets added to group at __init__
@@ -101,6 +103,9 @@ class Legionary:
                 enemy.rect.x -= abs(self.player.vel.x)
                 if enemy.rect.right < 0:
                     enemy.kill()
+            for projectile in self.projectiles:
+                projectile.rect.centerx -= abs(self.player.vel.x)
+
         # enemy collisions 
         enemy_collisions = pygame.sprite.spritecollide(self.player, self.enemies, False)
         if enemy_collisions:
@@ -121,9 +126,18 @@ class Legionary:
                 if self.playing:
                     self.playing = False
                 self.running = False
+            # Shooting
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    if self.projectile_count < 5:
+                        print("hello?")
+                        Projectile(self, self.player)
+                        self.projectile_count += 1
+            # Jumping
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
                     self.player.jump()
+            # End Jumping
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_UP:
                     self.player.end_jump()

@@ -1,5 +1,6 @@
 import pygame as pg
 
+
 class Enemy(pg.sprite.Sprite):
     def __init__(self, game, screen_y, screen_x, max_walk=40):
         self._layer = 2
@@ -17,6 +18,7 @@ class Enemy(pg.sprite.Sprite):
         self.left = True
         self.walk_count = 0
         self.max_walk = max_walk
+        self.sleep_count = 0
         self.vx = 3
 
     def update(self):
@@ -29,9 +31,13 @@ class Enemy(pg.sprite.Sprite):
                 self.image = self.image_left
             self.vx = self.vx * -1
             self.walk_count = 0
+            self.sleep_count = 20
         else:
-            self.walk_count += 1
-            self.rect.centerx += self.vx
+            if self.sleep_count == 0:
+                self.walk_count += 1
+                self.rect.centerx += self.vx
+            else:
+                self.sleep_count -= 1
 
 
 # class Enemy:
