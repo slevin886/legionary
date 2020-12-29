@@ -7,19 +7,6 @@ from legionary.platforms import Platform
 from legionary.settings import *
 
 
-
-# pygame.init()
-
-
-# CLOCK = pygame.time.Clock()
-# SCREEN_X = 1200
-# SCREEN_Y = 600
-# SCREEN = pygame.display.set_mode((SCREEN_X, SCREEN_Y))
-# BACKGROUND = pygame.image.load("./pngs/background.png").convert()
-# BACKGROUND = pygame.transform.scale(BACKGROUND, (1200, 600))
-# FRAMES_PER_SEC = 27
-
-
 class Legionary:
     def __init__(self):
         pygame.mixer.init()
@@ -40,6 +27,8 @@ class Legionary:
                 self.highscore = 0
         img_dir = path.join(self.dir, SPRITESHEET_FILE)
         self.sprite_sheet = LoadSprites(img_dir)
+        img_dir = path.join(self.dir, "pngs/spritesheet.png")
+        self.sprite_sheet_2 = LoadSprites(img_dir)
         # load sounds
         self.sound_dir = path.join(self.dir, "sounds")
         self.jump_sound = pygame.mixer.Sound(path.join(self.sound_dir, "jump.wav"))

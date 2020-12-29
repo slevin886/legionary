@@ -11,7 +11,7 @@ class LoadSprites:
     def get_image(self, x, y, width, height):
         image = pg.Surface((width, height))
         image.blit(self.spritesheet, (0, 0), (x, y, width, height))
-        image = pg.transform.scale(image, (width // 2, height // 2))
+        # image = pg.transform.scale(image, (width // 2, height // 2))
         return image #0, 0 for corner
 
 class Player(pg.sprite.Sprite):
@@ -23,7 +23,7 @@ class Player(pg.sprite.Sprite):
         # self.image = pg.Surface((30, 40))
         # self.image.fill((0, 255, 0))
         self.load_images()
-        self.image = self.standing_frames[0]
+        self.image = self.walk_frames_r[0]
         self.image.set_colorkey((0, 0, 0))
         self.rect = self.image.get_rect()
         self.acc_rate = acc_rate
@@ -42,23 +42,15 @@ class Player(pg.sprite.Sprite):
         self.right = False
 
     def load_images(self):
-        # assumes sprite sheet
-        self.standing_frames = [
-            self.game.sprite_sheet.get_image(614, 1063, 120, 191),
-            self.game.sprite_sheet.get_image(690, 406, 120, 201)
-        ]
-        for frame in self.standing_frames:
-            frame.set_colorkey((0, 0, 0))
         self.walk_frames_r = [
-            self.game.sprite_sheet.get_image(678, 860, 120, 201),
-            self.game.sprite_sheet.get_image(692, 1458, 120, 207)
+            self.game.sprite_sheet_2.get_image(259, 0, 60, 98),
+            self.game.sprite_sheet_2.get_image(198, 0, 60, 98)
         ]
         for frame in self.walk_frames_r:
             frame.set_colorkey((0, 0, 0))
 
         self.walk_frames_l = [pg.transform.flip(frame, True, False) for frame in self.walk_frames_r]
-        self.jump_frame = self.game.sprite_sheet.get_image(382, 763, 150, 181)
-        self.jump_frame.set_colorkey((0, 0, 0))
+
 
     def jump(self, jump_speed=-20):
         # check if on platform
@@ -102,9 +94,12 @@ class Player(pg.sprite.Sprite):
         if not self.jumping and not self.walking:
             if now - self.last_update > 250: # ms
                 self.last_update = now
-                self.current_frame = (self.current_frame + 1) % len(self.standing_frames)
+                if self.left:
+                    self.image = self.walk_frames_l[0]
+                else:
+                    self.image = self.walk_frames_r[0]
+                self.current_frame = 0
                 bottom = self.rect.bottom
-                self.image = self.standing_frames[self.current_frame]
                 self.rect = self.image.get_rect()
                 self.rect.bottom = bottom
 
@@ -132,111 +127,6 @@ class Player(pg.sprite.Sprite):
         if abs(self.vel.x) < 0.5:
             self.vel.x = 0
         self.pos += (self.vel + 0.5 * self.acc)
-        # instituting wrap around
-        # if self.pos.x > SCREEN_X:
-        #     self.pos.x = 0
         if self.pos.x < 0:
             self.pos.x = 0
         self.rect.midbottom = self.pos
-
-
-
-
-
-# class Player:
-
-#     def __init__(self, x, y, width, height, walk_images, velx=5, vely=8):
-#         self.x = x
-#         self.y = y
-#         self.width = width
-#         self.height = height
-#         self.velx = velx
-#         self.vely = vely
-#         self.left = False
-#         self.right = False
-#         self.jump = False
-#         self.jump_count = 10
-#         self.walk_count = 0
-#         self.walk_right = walk_images
-#         self.walk_left = [pygame.transform.flip(i, True, False) for i in walk_images]
-#         # self.standing_image = walk_right[0]
-#         self.standing = True
-#         # self.hitbox = (self.x + 17, self.y + 11, 29, 54)
-#         self.rect = pygame.Rect(self.x + 17, self.y + 11, 29, 54)
-#         self.health = 10
-
-
-#     def update(self):
-#         keys = pygame.key.get_pressed()
-#         if keys[pygame.K_SPACE] and reload_timer == 0:
-#             reload_timer = 1
-#             if self.left:
-#                 bullet_right = -1
-#             else: 
-#                 bullet_right = 1
-#             if len(bullets) < 5:
-#                 bullets.append(
-#                     Projectile(
-#                         round(self.x + self.width // 2), 
-#                         round(self.y + self.height // 2),
-#                         6,
-#                         bullet_right, 
-#                         (0, 0, 0)
-#                         )
-#                     )
-#         if keys[pygame.K_LEFT] and self.x > self.velx:
-#             self.x -= self.velx
-#             self.rect.x -= self.velx
-#             self.left = True
-#             self.right = False
-#             self.standing = False
-#         elif keys[pygame.K_RIGHT] and self.x < (SCREEN_X - self.width - self.velx):
-#             self.x += self.velx
-#             self.rect.x -= self.velx
-#             self.left = False
-#             self.right = True
-#             self.standing = False
-#         else:
-#             self.standing = True
-#             self.walk_count = 0
-#         if not self.jump:
-#             if keys[pygame.K_UP]:
-#                 self.jump = True
-#                 self.standing = True
-#                 self.walk_count = 0
-#         else:
-#             self.standing = True
-#             if self.jump_count >= -10:
-#                 # Change next line to vely?
-#                 self.y -= (abs(self.jump_count) * self.jump_count) * 0.5
-#                 self.jump_count -= 1
-#             else:
-#                 self.jump = False
-#                 self.jump_count = 10
-
-#     def draw(self, screen):
-#         if self.walk_count + 1 >= 27:
-#             self.walk_count = 0
-#         if not self.standing:
-#             if self.left:
-#                 screen.blit(self.walk_left[self.walk_count // 3], (self.x, self.y))
-#                 self.walk_count += 1
-#             elif self.right:
-#                 screen.blit(self.walk_right[self.walk_count // 3], (self.x, self.y))
-#                 self.walk_count += 1
-#         else:
-#             if self.left:
-#                 screen.blit(self.walk_left[0], (self.x, self.y))
-#             else:
-#                 screen.blit(self.walk_right[0], (self.x, self.y))
-#         if self.left: # correct for image turninig left:
-#             self.hitbox = (self.x + 55, self.y + 3, 35, 95)
-#             self.rect = pygame.Rect(self.x + 55, self.y + 3, 35, 95)
-#         else:
-#             self.hitbox = (self.x + 25, self.y + 3, 35, 95)
-#             self.rect = pygame.Rect(self.x + 25, self.y + 3, 35, 95)
-#         pygame.draw.rect(screen, (255, 0, 0), self.hitbox, 2)
-    
-#     def hit(self):
-#         self.health -= 1
-#         return 1
