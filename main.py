@@ -1,4 +1,5 @@
 import pygame
+import random
 from os import path
 from legionary.player import Player, LoadSprites
 from legionary.enemies import Enemy
@@ -6,6 +7,8 @@ from legionary.projectiles import Projectile
 from legionary.platforms import Platform
 from legionary.settings import *
 
+# https://w3samples.com/Sprite-Get-Position get sprite positions
+# create sprite sheet https://codeshack.io/images-sprite-sheet-generator/
 
 class Legionary:
     def __init__(self):
@@ -27,7 +30,7 @@ class Legionary:
                 self.highscore = 0
         img_dir = path.join(self.dir, SPRITESHEET_FILE)
         self.sprite_sheet = LoadSprites(img_dir)
-        img_dir = path.join(self.dir, "pngs/spritesheet.png")
+        img_dir = path.join(self.dir, "pngs/spritesheet2.png")
         self.sprite_sheet_2 = LoadSprites(img_dir)
         # load sounds
         self.sound_dir = path.join(self.dir, "sounds")
@@ -81,6 +84,10 @@ class Legionary:
             if pow.type == "boost":
                 self.player.vel.x = BOOST_POWER
                 self.player.jumping = False
+        
+        # Fireballs
+        if random.randint(0, 100) > 80:
+            Projectile(self, (random.randint(20, SCREEN_X), -45), -3, 3, (318, 0, 46, 45))
         # Scroll screen
         if self.player.pos.x > SCREEN_X / 2 and self.player.vel.x > 1:
             self.player.pos.x = SCREEN_X / 2 - 2  # -2 prevents friction from hanging over mid  
@@ -96,7 +103,9 @@ class Legionary:
                 projectile.rect.centerx -= abs(self.player.vel.x)
 
         # enemy collisions 
-        enemy_collisions = pygame.sprite.spritecollide(self.player, self.enemies, False)
+        enemy_collisions = pygame.sprite.spritecollide(
+            self.player, self.enemies, False, collided=pygame.sprite.collide_rect_ratio(0.6)
+            )
         if enemy_collisions:
             # TODO: decrease player health
             self.playing = False
@@ -119,8 +128,10 @@ class Legionary:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     if self.projectile_count < 5:
-                        print("hello?")
-                        Projectile(self, self.player)
+                        if self.player.left:
+                            Projectile(self, self.player.rect.topright, -7, 0, (318, 0, 46, 45))
+                        else:
+                            Projectile(self, self.player.rect.topleft, 7, 0, (318, 0, 46, 45))
                         self.projectile_count += 1
             # Jumping
             if event.type == pygame.KEYDOWN:

@@ -1,27 +1,30 @@
 import pygame as pg
-from legionary.settings import SCREEN_X
+from legionary.settings import SCREEN_X, SCREEN_Y
+
+vec = pg.math.Vector2
 
 class Projectile(pg.sprite.Sprite):
-    def __init__(self, game, player):
+    def __init__(self, game, tl_xy_coord: tuple, velx: int, vely: int, img_coordinates: tuple):
         self._layer = 2
         self.groups = game.all_sprites, game.projectiles
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
-        self.player = player
-        self.image = self.game.sprite_sheet.get_image(420, 1558, 145, 77)
+        # self.player = player
+        self.image = self.game.sprite_sheet_2.get_image(*img_coordinates)
         self.image.set_colorkey((0, 0, 0))
         self.rect = self.image.get_rect()
-        if player.left:
-            self.vx = -5
-            self.rect.right = self.player.rect.left
-        else:
-            self.vx = 5
-            self.rect.left = self.player.rect.right
-        self.rect.top = self.player.rect.top
+        # if player.left:
+        #     self.vx = -5
+        #     self.rect.right = self.player.rect.left
+        # else:
+        #     self.vx = 5
+        #     self.rect.left = self.player.rect.right
+        self.vel = vec(velx, vely)
+        self.rect.topleft = tl_xy_coord
     
     def update(self):
-        self.rect.centerx += self.vx
-        if self.rect.left > SCREEN_X or self.rect.right < 0:
+        self.rect.topleft += self.vel
+        if (self.rect.left > SCREEN_X or self.rect.right < 0 or self.rect.bottom > SCREEN_Y):
             self.game.projectile_count -= 1
             self.kill()
 
