@@ -1,4 +1,6 @@
+import os
 import pygame as pg
+from legionary.projectiles import Projectile
 from .settings import *
 
 vec = pg.math.Vector2
@@ -36,20 +38,35 @@ class Player(pg.sprite.Sprite):
         self.standing = True
         self.walking = False
         self.jumping = False
+        self.throwing = False
         self.current_frame = 0
         self.last_update = 0 # space out the frame rate
         self.left = False
         self.right = False
 
     def load_images(self):
+        img_dir = os.path.join(self.game.dir, "pngs/player")
         self.walk_frames_r = [
             self.game.sprite_sheet_2.get_image(259, 0, 60, 98),
             self.game.sprite_sheet_2.get_image(198, 0, 60, 98)
         ]
         for frame in self.walk_frames_r:
             frame.set_colorkey((0, 0, 0))
-
         self.walk_frames_l = [pg.transform.flip(frame, True, False) for frame in self.walk_frames_r]
+        self.throw_images_r = [
+            pg.image.load(os.path.join(img_dir, "throw1.png")).convert(),
+            pg.image.load(os.path.join(img_dir, "throw2.png")).convert()
+        ]
+        for frame in self.throw_images_r:
+            frame.set_colorkey((0, 0, 0))
+        self.throw_images_l = [pg.transform.flip(frame, True, False) for frame in self.throw_images_r]
+
+
+    def throw(self):
+        if not self.throwing:
+            self.throwing = True
+            self.current_frame = 0
+            self.walking = False
 
 
     def jump(self, jump_speed=-20):
@@ -62,18 +79,16 @@ class Player(pg.sprite.Sprite):
             self.jumping = True
             self.game.jump_sound.play()
     
+
     def end_jump(self):
         if self.jumping:
             if self.vel.y < -3:
                 self.vel.y = -3
 
-    def shoot(self):
-        pass
-
     
     def animate(self):
         now = pg.time.get_ticks()
-        if self.vel.x != 0:
+        if self.vel.x != 0 and not self.throwing:
             self.walking = True
         else:
             self.walking = False
@@ -91,7 +106,7 @@ class Player(pg.sprite.Sprite):
                 self.rect.bottom = bottom
 
         # standing frames
-        if not self.jumping and not self.walking:
+        if not self.jumping and not self.walking and not self.throwing:
             if now - self.last_update > 250: # ms
                 self.last_update = now
                 if self.left:
@@ -102,6 +117,29 @@ class Player(pg.sprite.Sprite):
                 bottom = self.rect.bottom
                 self.rect = self.image.get_rect()
                 self.rect.bottom = bottom
+
+        if self.throwing:
+            if now - self.last_update > 250: # ms
+                self.last_update = now
+                if self.left:
+                    self.image = self.throw_images_l[self.current_frame]
+                    if self.current_frame == 1:
+                        Projectile(self.game, self.rect.topright, -7, 0, (318, 0, 46, 45))
+                        self.game.projectile_count += 1
+                else:
+                    self.image = self.throw_images_r[self.current_frame]
+                    if self.current_frame == 1:
+                        Projectile(self.game, self.rect.topleft, 7, 0, (318, 0, 46, 45))
+                        self.game.projectile_count += 1
+                bottom = self.rect.bottom
+                self.rect = self.image.get_rect()
+                self.rect.bottom = bottom
+                if self.current_frame == 1:
+                    self.throwing = False
+                    self.current_frame = 0
+                else:
+                    self.current_frame = 1
+
 
     def update(self):
         self.animate()

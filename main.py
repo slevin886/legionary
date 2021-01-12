@@ -86,7 +86,7 @@ class Legionary:
                 self.player.jumping = False
         
         # Fireballs
-        if random.randint(0, 100) > 80:
+        if random.randint(0, 100) > 95:
             Projectile(self, (random.randint(20, SCREEN_X), -45), -3, 3, (318, 0, 46, 45))
         # Scroll screen
         if self.player.pos.x > SCREEN_X / 2 and self.player.vel.x > 1:
@@ -127,12 +127,8 @@ class Legionary:
             # Shooting
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    if self.projectile_count < 5:
-                        if self.player.left:
-                            Projectile(self, self.player.rect.topright, -7, 0, (318, 0, 46, 45))
-                        else:
-                            Projectile(self, self.player.rect.topleft, 7, 0, (318, 0, 46, 45))
-                        self.projectile_count += 1
+                    if self.projectile_count < 5 and not self.player.throwing:
+                        self.player.throw()
             # Jumping
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
