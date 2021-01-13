@@ -87,7 +87,7 @@ class Legionary:
         
         # Fireballs
         if random.randint(0, 100) > 95:
-            Projectile(self, (random.randint(20, SCREEN_X), -45), -3, 3, (318, 0, 46, 45))
+            Projectile(self, (random.randint(20, SCREEN_X), -45), -3, 3, "pngs/projectiles/fireball.png")
         # Scroll screen
         if self.player.pos.x > SCREEN_X / 2 and self.player.vel.x > 1:
             self.player.pos.x = SCREEN_X / 2 - 2  # -2 prevents friction from hanging over mid  

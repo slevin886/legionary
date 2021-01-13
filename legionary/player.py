@@ -124,12 +124,12 @@ class Player(pg.sprite.Sprite):
                 if self.left:
                     self.image = self.throw_images_l[self.current_frame]
                     if self.current_frame == 1:
-                        Projectile(self.game, self.rect.topright, -7, 0, (318, 0, 46, 45))
+                        Projectile(self.game, self.rect.midright, -7, 0, "pngs/projectiles/sword.png")
                         self.game.projectile_count += 1
                 else:
                     self.image = self.throw_images_r[self.current_frame]
                     if self.current_frame == 1:
-                        Projectile(self.game, self.rect.topleft, 7, 0, (318, 0, 46, 45))
+                        Projectile(self.game, self.rect.midleft, 7, 0, "pngs/projectiles/sword.png")
                         self.game.projectile_count += 1
                 bottom = self.rect.bottom
                 self.rect = self.image.get_rect()
